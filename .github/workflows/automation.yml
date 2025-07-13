@@ -1,16 +1,16 @@
 name: Update Notion Database
 
 on:
-  workflow_dispatch:  # allow manual trigger
   schedule:
-    - cron: '0 8 * * *'  # run every day at 08:00 UTC
+    - cron: '*/5 * * * *'  # every 5 minutes
+  workflow_dispatch:       # also allow manual trigger
 
 jobs:
   notion:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -20,11 +20,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install notion-client python-dotenv
+          pip install notion-client
 
-      - name: Run Notion update
+      - name: Run Notion Update Script
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          DATABASE_ID: ${{ secrets.DATABASE_ID }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          SCORE_DB_ID: ${{ secrets.SCORE_DB_ID }}
+          MAIN_DB_ID: ${{ secrets.MAIN_DB_ID }}
         run: |
+          mkdir -p logs
           python3 scripts/update_notion.py
