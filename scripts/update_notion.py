@@ -1,6 +1,7 @@
 import os
 import datetime
 from notion_client import Client
+print("⚡ Starting Notion update script")
 
 # Load environment variables
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
@@ -88,3 +89,4 @@ def update_additional_db():
 
 if __name__ == "__main__":
     main()
+print("✅ Script completed successfully")
