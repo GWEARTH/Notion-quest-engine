@@ -1,28 +1,28 @@
-name: Update Notion Database
+name: Update Notion DB
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # every 5 minutes
-  workflow_dispatch:       # also allow manual trigger
+    - cron: "*/5 * * * *" # every 5 minutes
+  workflow_dispatch:      # allow manual trigger
 
 jobs:
-  notion:
+  update-notion:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: |
-          pip install notion-client
+          pip install notion-client python-dotenv
 
-      - name: Run Notion Update Script
+      - name: Run script
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           SCORE_DB_ID: ${{ secrets.SCORE_DB_ID }}
