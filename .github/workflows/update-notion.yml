@@ -2,8 +2,8 @@ name: Update Notion DB
 
 on:
   schedule:
-    - cron: "*/5 * * * *" # every 5 minutes
-  workflow_dispatch:      # allow manual trigger
+    - cron: "30 6 * * *"   # runs at 06:30 UTC = 12:00 IST
+  workflow_dispatch:       # allow manual trigger
 
 jobs:
   update-notion:
