@@ -4,9 +4,11 @@ from notion_client import Client
 print("⚡ Starting Notion update script")
 
 # Load environment variables
-NOTION_API_KEY = os.getenv("NOTION_API_KEY")
-SCORE_DB_ID = os.getenv("SCORE_DB_ID")
-MAIN_DB_ID = os.getenv("MAIN_DB_ID")
+import os
+
+SCORE_DB_ID = os.environ["SCORE_DB_ID"].strip()
+MAIN_DB_ID = os.environ["MAIN_DB_ID"].strip()
+NOTION_API_KEY = os.environ["NOTION_API_KEY"].strip()
 
 # Initialize Notion client
 notion = Client(auth=NOTION_API_KEY)
