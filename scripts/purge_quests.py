@@ -1,5 +1,5 @@
 import os
-import requests
+from notion_client import Client
 from dotenv import load_dotenv
 
 # Load .env if running locally
@@ -11,38 +11,36 @@ NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 if not DATABASE_ID or not NOTION_API_KEY:
     raise ValueError("❌ Missing QUEST_DB_ID or NOTION_API_KEY in environment.")
 
-HEADERS = {
-    "Authorization": f"Bearer {NOTION_API_KEY}",
-    "Notion-Version": "2022-06-28",
-    "Content-Type": "application/json",
-}
+notion = Client(auth=NOTION_API_KEY)
 
-CHECKBOX_PROPERTY = "Completed"  # Change this if your checkbox property has a different name
+CHECKBOX_PROPERTY = "Completed"  # adjust if your property has a different name
 
 
 def fetch_quests_to_purge():
     """
     Query the database for pages where the checkbox is True.
     """
-    query_url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
-    payload = {
-        "filter": {
-            "property": CHECKBOX_PROPERTY,
-            "checkbox": {
-                "equals": True
-            }
-        }
-    }
+    pages = []
+    start_cursor = None
 
-    resp = requests.post(query_url, headers=HEADERS, json=payload)
-    if resp.status_code == 404:
-        raise ValueError("❌ Database not found. Check that DATABASE_ID is correct and shared with the integration.")
-    if resp.status_code == 401:
-        raise ValueError("❌ Unauthorized. Check that NOTION_API_KEY is correct.")
-    resp.raise_for_status()
+    while True:
+        response = notion.databases.query(
+            database_id=DATABASE_ID,
+            filter={
+                "property": CHECKBOX_PROPERTY,
+                "checkbox": {
+                    "equals": True
+                }
+            },
+            start_cursor=start_cursor
+        )
+        pages.extend(response["results"])
 
-    data = resp.json()
-    pages = data.get("results", [])
+        if response.get("has_more"):
+            start_cursor = response["next_cursor"]
+        else:
+            break
+
     return pages
 
 
@@ -50,17 +48,14 @@ def uncheck_quest(page_id):
     """
     Set the checkbox to False for a given page.
     """
-    update_url = f"https://api.notion.com/v1/pages/{page_id}"
-    payload = {
-        "properties": {
+    notion.pages.update(
+        page_id=page_id,
+        properties={
             CHECKBOX_PROPERTY: {
                 "checkbox": False
             }
         }
-    }
-
-    resp = requests.patch(update_url, headers=HEADERS, json=payload)
-    resp.raise_for_status()
+    )
 
 
 if __name__ == "__main__":
@@ -69,7 +64,7 @@ if __name__ == "__main__":
     try:
         quests = fetch_quests_to_purge()
     except Exception as e:
-        print(e)
+        print(f"❌ Error while querying database: {e}")
         exit(1)
 
     if not quests:
