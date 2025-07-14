@@ -1,29 +1,30 @@
-name: Update Notion DB
+name: 🚀 Update Notion Databases
 
 on:
   schedule:
-    - cron: "30 6 * * *"   # runs at 06:30 UTC = 12:00 IST
-  workflow_dispatch:       # allow manual trigger
+    - cron: "30 6 * * *"   # Runs at 06:30 UTC (12:00 IST)
+  workflow_dispatch:       # Allows manual trigger from GitHub UI
 
 jobs:
   update-notion:
+    name: 🔄 Update Notion DBs
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install notion-client python-dotenv 
+          pip install notion-client python-dotenv
 
-      - name: Run scripts
+      - name: 🚀 Run Notion update scripts
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           SCORE_DB_ID: ${{ secrets.SCORE_DB_ID }}
@@ -31,6 +32,7 @@ jobs:
           QUEST_DB_ID: ${{ secrets.QUEST_DB_ID }}
         run: |
           mkdir -p logs
+          echo "⚡ Running update_notion.py..."
           python3 scripts/update_notion.py > logs/update_notion.log
-          python3 scripts/purge_quests.py 
-          
+          echo "⚡ Running purge_quests.py..."
+          python3 scripts/purge_quests.py > logs/purge_quests.log

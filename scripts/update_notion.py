@@ -1,22 +1,37 @@
 import os
 import datetime
 from notion_client import Client
-from dotenv import load_dotenv
 
+# only load .env locally
+if not os.getenv("CI"):  # CI=true is automatically set in GitHub Actions
+    from dotenv import load_dotenv
+    load_dotenv()
 
+# Read env vars
+NOTION_API_KEY = os.getenv("NOTION_API_KEY", "").strip()
+SCORE_DB_ID = os.getenv("SCORE_DB_ID", "").strip()
+MAIN_DB_ID = os.getenv("MAIN_DB_ID", "").strip()
+
+if not NOTION_API_KEY:
+    raise RuntimeError("❌ NOTION_API_KEY is missing")
+if not SCORE_DB_ID or not MAIN_DB_ID:
+    raise RuntimeError("❌ SCORE_DB_ID or MAIN_DB_ID is missing")
+
+notion = Client(auth=NOTION_API_KEY)
 
 # Constants
 TARGET_PAGE_NAME = "Null"
 SCORE_TITLE_PROPERTY = "Scores"
 MAIN_TITLE_PROPERTY = "Dashboard"
 
-notion = Client(auth=NOTION_TOKEN)
 
 def log(message):
     timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("[%Y-%m-%d %H:%M:%S UTC]")
+    os.makedirs("logs", exist_ok=True)
     with open("logs/update.log", "a") as f:
         f.write(f"{timestamp} {message}\n")
     print(message)
+
 
 def get_page_by_name(db_id, title_property, page_name):
     response = notion.databases.query(
@@ -29,35 +44,30 @@ def get_page_by_name(db_id, title_property, page_name):
         }
     )
     results = response.get("results", [])
-    if results:
-        return results[0]
-    return None
+    return results[0] if results else None
+
 
 def get_property(page, prop_name):
-    props = page["properties"]
-    prop = props.get(prop_name, {})
+    prop = page["properties"].get(prop_name, {})
     if prop.get("type") == "rollup":
         return prop.get("rollup", {}).get("number", 0) or 0
-    elif prop.get("type") == "number":
+    if prop.get("type") == "number":
         return prop.get("number", 0) or 0
-    else:
-        return 0
+    return 0
+
 
 def update_property(page_id, prop_name, value):
     notion.pages.update(
         page_id=page_id,
-        properties={
-            prop_name: {
-                "number": value
-            }
-        }
+        properties={prop_name: {"number": value}}
     )
+
+
 def main():
-    os.makedirs("logs", exist_ok=True)
     log("⚡ Starting Notion update script")
+    log("🚀 Starting Notion DB update")
 
     # Get pages
-    log("🚀 Starting Notion DB update")
     score_page = get_page_by_name(SCORE_DB_ID, SCORE_TITLE_PROPERTY, TARGET_PAGE_NAME)
     main_page = get_page_by_name(MAIN_DB_ID, MAIN_TITLE_PROPERTY, TARGET_PAGE_NAME)
 

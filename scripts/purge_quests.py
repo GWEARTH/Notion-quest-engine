@@ -1,12 +1,15 @@
 from notion_client import Client
-from dotenv import load_dotenv
 import os
 
-# 🔷 Load .env
-load_dotenv()
+# 🔷 Only load .env locally (optional)
+if not os.getenv("CI"):  # In GitHub Actions, CI=true
+    from dotenv import load_dotenv
+    load_dotenv()
+
+# 🔷 Environment variables
 NOTION_API_KEY = os.getenv("NOTION_API_KEY", "").strip()
 QUEST_DB_ID = os.getenv("QUEST_DB_ID", "").strip()
-CHECKBOX_PROPERTY = "Checkbox"  # name of your checkbox property
+CHECKBOX_PROPERTY = "Checkbox"  # Change if your property name is different
 
 if not NOTION_API_KEY:
     raise ValueError("❌ NOTION_API_KEY is missing.")
@@ -29,9 +32,10 @@ def fetch_quests_to_reset():
                 "checkbox": {"equals": True}
             }
         )
-        for page in response["results"]:
+        for page in response.get("results", []):
             pages_to_reset.append(page["id"])
         return pages_to_reset
+
     except Exception as e:
         print(f"❌ Error fetching quests: {e}")
         return []
@@ -53,15 +57,25 @@ def reset_checkbox(page_id):
         print(f"❌ Failed to reset {page_id}: {e}")
 
 
-if __name__ == "__main__":
+def main():
     print("🔷 Initiating quest purge...")
 
     quests = fetch_quests_to_reset()
 
     if not quests:
         print("✅ No quests to purge. All clean.")
-    else:
-        print(f"⚔️ Found {len(quests)} quests to reset.")
-        for q in quests:
-            reset_checkbox(q)
-        print("🎯 Purge complete.")
+        return
+
+    print(f"⚔️ Found {len(quests)} quests to reset.")
+    for q in quests:
+        reset_checkbox(q)
+
+    print("🎯 Purge complete.")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"🔥 Script crashed: {e}")
+        raise
