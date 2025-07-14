@@ -13,13 +13,10 @@ if not DATABASE_ID or not NOTION_API_KEY:
 
 notion = Client(auth=NOTION_API_KEY)
 
-CHECKBOX_PROPERTY = "Completed"  # adjust if your property has a different name
+CHECKBOX_PROPERTY = "Completed"  # adjust if your property name is different
 
 
 def fetch_quests_to_purge():
-    """
-    Query the database for pages where the checkbox is True.
-    """
     pages = []
     start_cursor = None
 
@@ -45,9 +42,6 @@ def fetch_quests_to_purge():
 
 
 def uncheck_quest(page_id):
-    """
-    Set the checkbox to False for a given page.
-    """
     notion.pages.update(
         page_id=page_id,
         properties={
