@@ -1,4 +1,4 @@
-nname: Update Notion DB
+name: Update Notion DB
 
 on:
   schedule:
