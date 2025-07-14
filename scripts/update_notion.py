@@ -3,11 +3,7 @@ import datetime
 from notion_client import Client
 from dotenv import load_dotenv
 
-# Load env vars
-load_dotenv()
-NOTION_TOKEN = os.getenv("NOTION_API_KEY", "").strip()
-SCORE_DB_ID = os.getenv("SCORE_DB_ID", "").strip()
-MAIN_DB_ID = os.getenv("MAIN_DB_ID", "").strip()
+
 
 # Constants
 TARGET_PAGE_NAME = "Null"

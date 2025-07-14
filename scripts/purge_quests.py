@@ -1,76 +1,67 @@
-import os
 from notion_client import Client
 from dotenv import load_dotenv
+import os
 
-# Load .env if running locally
+# 🔷 Load .env
 load_dotenv()
+NOTION_API_KEY = os.getenv("NOTION_API_KEY", "").strip()
+QUEST_DB_ID = os.getenv("QUEST_DB_ID", "").strip()
+CHECKBOX_PROPERTY = "Checkbox"  # name of your checkbox property
 
-DATABASE_ID = os.getenv("QUEST_DB_ID").strip()
-NOTION_API_KEY = os.getenv("NOTION_API_KEY").strip()
-
-if not DATABASE_ID or not NOTION_API_KEY:
-    raise ValueError("❌ Missing QUEST_DB_ID or NOTION_API_KEY in environment.")
+if not NOTION_API_KEY:
+    raise ValueError("❌ NOTION_API_KEY is missing.")
+if not QUEST_DB_ID:
+    raise ValueError("❌ QUEST_DB_ID is missing.")
 
 notion = Client(auth=NOTION_API_KEY)
 
-CHECKBOX_PROPERTY = "Completed"  # adjust if your property name is different
 
-
-def fetch_quests_to_purge():
-    pages = []
-    start_cursor = None
-
-    while True:
+def fetch_quests_to_reset():
+    """
+    Fetch all pages in the database where Checkbox == True.
+    """
+    pages_to_reset = []
+    try:
         response = notion.databases.query(
-            database_id=DATABASE_ID,
+            database_id=QUEST_DB_ID,
             filter={
                 "property": CHECKBOX_PROPERTY,
-                "checkbox": {
-                    "equals": True
-                }
-            },
-            start_cursor=start_cursor
-        )
-        pages.extend(response["results"])
-
-        if response.get("has_more"):
-            start_cursor = response["next_cursor"]
-        else:
-            break
-
-    return pages
-
-
-def uncheck_quest(page_id):
-    notion.pages.update(
-        page_id=page_id,
-        properties={
-            CHECKBOX_PROPERTY: {
-                "checkbox": False
+                "checkbox": {"equals": True}
             }
-        }
-    )
+        )
+        for page in response["results"]:
+            pages_to_reset.append(page["id"])
+        return pages_to_reset
+    except Exception as e:
+        print(f"❌ Error fetching quests: {e}")
+        return []
+
+
+def reset_checkbox(page_id):
+    """
+    Set Checkbox property to False on the given page.
+    """
+    try:
+        notion.pages.update(
+            page_id=page_id,
+            properties={
+                CHECKBOX_PROPERTY: {"checkbox": False}
+            }
+        )
+        print(f"✅ Reset quest: {page_id}")
+    except Exception as e:
+        print(f"❌ Failed to reset {page_id}: {e}")
 
 
 if __name__ == "__main__":
     print("🔷 Initiating quest purge...")
 
-    try:
-        quests = fetch_quests_to_purge()
-    except Exception as e:
-        print(f"❌ Error while querying database: {e}")
-        exit(1)
+    quests = fetch_quests_to_reset()
 
     if not quests:
-        print("✅ No quests marked for purge. All is clean.")
+        print("✅ No quests to purge. All clean.")
     else:
-        print(f"⚔️ Found {len(quests)} quests to purge.")
-        for quest in quests:
-            page_id = quest["id"]
-            try:
-                uncheck_quest(page_id)
-                print(f" - ✅ Unchecked quest: {page_id}")
-            except Exception as e:
-                print(f" - ❌ Failed to uncheck {page_id}: {e}")
-
+        print(f"⚔️ Found {len(quests)} quests to reset.")
+        for q in quests:
+            reset_checkbox(q)
         print("🎯 Purge complete.")
