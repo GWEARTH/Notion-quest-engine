@@ -27,6 +27,9 @@ jobs:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           SCORE_DB_ID: ${{ secrets.SCORE_DB_ID }}
           MAIN_DB_ID: ${{ secrets.MAIN_DB_ID }}
+          QUEST_DB_ID: ${{ secrets.QUEST_DB_ID }}
         run: |
           mkdir -p logs
-          python3 scripts/update_notion.py
+          python3 scripts/update_notion.py >logs/update_notion.logs
+          python3 scripts/purge_quests.py
+          

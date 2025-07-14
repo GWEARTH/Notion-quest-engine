@@ -1,72 +1,87 @@
 import os
 import requests
+from dotenv import load_dotenv
 
-NOTION_API_KEY = os.getenv("NOTION_API_KEY")
+# Load .env if running locally
+load_dotenv()
+
 DATABASE_ID = os.getenv("QUEST_DB_ID")
+NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 
-headers = {
+if not DATABASE_ID or not NOTION_API_KEY:
+    raise ValueError("❌ Missing QUEST_DB_ID or NOTION_API_KEY in environment.")
+
+HEADERS = {
     "Authorization": f"Bearer {NOTION_API_KEY}",
     "Notion-Version": "2022-06-28",
     "Content-Type": "application/json",
 }
 
-query_url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
-update_url = "https://api.notion.com/v1/pages/"
+CHECKBOX_PROPERTY = "Completed"  # Change this if your checkbox property has a different name
 
-def fetch_pages_marked_for_purge():
-    """
-    Fetch all pages where the 'Checkbox' property is True.
-    These are the quests to be purged.
-    """
-    pages = []
-    has_more = True
-    next_cursor = None
 
-    while has_more:
-        payload = {
-            "filter": {
-                "property": "Checkbox",
-                "checkbox": {"equals": True}
+def fetch_quests_to_purge():
+    """
+    Query the database for pages where the checkbox is True.
+    """
+    query_url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+    payload = {
+        "filter": {
+            "property": CHECKBOX_PROPERTY,
+            "checkbox": {
+                "equals": True
             }
         }
+    }
 
-        if next_cursor:
-            payload["start_cursor"] = next_cursor
+    resp = requests.post(query_url, headers=HEADERS, json=payload)
+    if resp.status_code == 404:
+        raise ValueError("❌ Database not found. Check that DATABASE_ID is correct and shared with the integration.")
+    if resp.status_code == 401:
+        raise ValueError("❌ Unauthorized. Check that NOTION_API_KEY is correct.")
+    resp.raise_for_status()
 
-        response = requests.post(query_url, headers=headers, json=payload)
-        response.raise_for_status()
-        data = response.json()
-
-        pages.extend(data["results"])
-        has_more = data.get("has_more", False)
-        next_cursor = data.get("next_cursor")
-
+    data = resp.json()
+    pages = data.get("results", [])
     return pages
 
-def purge_quest(page_id):
+
+def uncheck_quest(page_id):
     """
-    Set the 'Checkbox' property of a page to False — purge it.
+    Set the checkbox to False for a given page.
     """
+    update_url = f"https://api.notion.com/v1/pages/{page_id}"
     payload = {
         "properties": {
-            "Checkbox": {
+            CHECKBOX_PROPERTY: {
                 "checkbox": False
             }
         }
     }
 
-    response = requests.patch(f"{update_url}{page_id}", headers=headers, json=payload)
-    response.raise_for_status()
-    print(f"Purged quest: {page_id}")
+    resp = requests.patch(update_url, headers=HEADERS, json=payload)
+    resp.raise_for_status()
+
 
 if __name__ == "__main__":
     print("🔷 Initiating quest purge...")
-    quests_to_purge = fetch_pages_marked_for_purge()
 
-    if not quests_to_purge:
+    try:
+        quests = fetch_quests_to_purge()
+    except Exception as e:
+        print(e)
+        exit(1)
+
+    if not quests:
         print("✅ No quests marked for purge. All is clean.")
     else:
-        print(f"⚔️ Found {len(quests_to_purge)} quests to purge.")
-        for quest in quests_to_purge:
-            purge_quest(quest["id"])
+        print(f"⚔️ Found {len(quests)} quests to purge.")
+        for quest in quests:
+            page_id = quest["id"]
+            try:
+                uncheck_quest(page_id)
+                print(f" - ✅ Unchecked quest: {page_id}")
+            except Exception as e:
+                print(f" - ❌ Failed to uncheck {page_id}: {e}")
+
         print("🎯 Purge complete.")
