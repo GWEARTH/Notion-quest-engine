@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 # Load .env if running locally
 load_dotenv()
 
-DATABASE_ID = os.getenv("QUEST_DB_ID")
-NOTION_API_KEY = os.getenv("NOTION_API_KEY")
+DATABASE_ID = os.getenv("QUEST_DB_ID").strip()
+NOTION_API_KEY = os.getenv("NOTION_API_KEY").strip()
 
 if not DATABASE_ID or not NOTION_API_KEY:
     raise ValueError("❌ Missing QUEST_DB_ID or NOTION_API_KEY in environment.")
