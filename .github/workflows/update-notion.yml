@@ -1,4 +1,4 @@
-name: Update Notion DB
+nname: Update Notion DB
 
 on:
   schedule:
@@ -20,9 +20,10 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install notion-client python-dotenv requests
 
-      - name: Run script
+      - name: Run scripts
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           SCORE_DB_ID: ${{ secrets.SCORE_DB_ID }}
@@ -30,6 +31,6 @@ jobs:
           QUEST_DB_ID: ${{ secrets.QUEST_DB_ID }}
         run: |
           mkdir -p logs
-          python3 scripts/update_notion.py >logs/update_notion.logs
+          python3 scripts/update_notion.py > logs/update_notion.log
           python3 scripts/purge_quests.py
           
