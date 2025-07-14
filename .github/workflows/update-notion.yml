@@ -18,12 +18,11 @@ jobs:
         with:
           python-version: "3.x"
 
-      
+      - name: Install dependencies
+        run: |
+          pip install notion-client python-dotenv requests
 
-      - name: Run script- name: Install dependencies
-  run: |
-    pip install notion-client python-dotenv requests
-
+      - name: Run script
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           SCORE_DB_ID: ${{ secrets.SCORE_DB_ID }}
