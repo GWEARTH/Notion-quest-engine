@@ -56,10 +56,9 @@ def update_property(page_id, prop_name, value):
             }
         }
     )
-
 def main():
-    log("⚡ Starting Notion update script")
     os.makedirs("logs", exist_ok=True)
+    log("⚡ Starting Notion update script")
 
     # Get pages
     log("🚀 Starting Notion DB update")
@@ -97,5 +96,10 @@ def main():
 
     log("🎉 Successfully updated Main DB.")
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        log(f"🔥 Script crashed: {e}")
+        raise
