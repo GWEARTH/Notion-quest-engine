@@ -20,7 +20,7 @@ if not SCORE_DB_ID or not MAIN_DB_ID:
 notion = Client(auth=NOTION_API_KEY)
 
 # Constants
-TARGET_PAGE_NAME = "Null"
+TARGET_PAGE_NAME = "Row"
 SCORE_TITLE_PROPERTY = "Scores"
 MAIN_TITLE_PROPERTY = "Dashboard"
 
