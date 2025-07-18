@@ -20,7 +20,8 @@ if not SCORE_DB_ID or not MAIN_DB_ID:
 notion = Client(auth=NOTION_API_KEY)
 
 # Constants
-TARGET_PAGE_NAME = "Null"
+MENU_PAGE_NAME = "Total"
+SCORE_PAGE_NAME ="Score" 
 SCORE_TITLE_PROPERTY = "Scores"
 MAIN_TITLE_PROPERTY = "Dashboard"
 
@@ -68,8 +69,8 @@ def main():
     log("🚀 Starting Notion DB update")
 
     # Get pages
-    score_page = get_page_by_name(SCORE_DB_ID, SCORE_TITLE_PROPERTY, TARGET_PAGE_NAME)
-    main_page = get_page_by_name(MAIN_DB_ID, MAIN_TITLE_PROPERTY, TARGET_PAGE_NAME)
+    score_page = get_page_by_name(SCORE_DB_ID, SCORE_TITLE_PROPERTY,SCORE_PAGE_NAME)
+    main_page = get_page_by_name(MAIN_DB_ID, MAIN_TITLE_PROPERTY,MENU_PAGE_NAME)
 
     if not score_page or not main_page:
         log("❌ Could not find one or both pages.")
