@@ -4,21 +4,22 @@ on:
   workflow_dispatch:   # allow manual + API triggered runs
 
 jobs:
-  store-update:
+  update-notion:
+    name: 🔄 Update Notion DBs
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.x"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
-        python -m pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install notion-client python-dotenv
 
       - name: Run Store_update script
