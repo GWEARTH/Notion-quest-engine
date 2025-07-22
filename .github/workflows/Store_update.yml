@@ -22,10 +22,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install notion-client python-dotenv
 
-      - name: Run Store_update script
+      - name: 🚀 Run Store_update script
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           STORE_GAMES_ID: ${{ secrets.STORE_GAMES_ID }}
           MAIN_DB_ID: ${{ secrets.MAIN_DB_ID }}
         run: |
-          python scripts/Games_update.py   
+          python scripts/Games_update.py
